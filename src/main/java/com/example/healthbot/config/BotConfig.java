@@ -23,7 +23,7 @@ public class BotConfig {
     private int proxyPort;
 
     @Bean
-    public HealthServiceTelegramBot MySuperTelegramBot() {
+    public HealthServiceTelegramBot TelegramBot() {
         DefaultBotOptions options = ApiContext
                 .getInstance(DefaultBotOptions.class);
 
