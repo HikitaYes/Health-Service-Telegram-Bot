@@ -1,41 +1,34 @@
 package com.example.healthbot.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.telegram.telegrambots.bots.DefaultBotOptions;
-import org.telegram.telegrambots.meta.*;
-import com.example.healthbot.HealthServiceTelegramBot;
+import org.telegram.telegrambots.meta.TelegramBotsApi;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 @Setter
-@Getter
 @Configuration
 @ConfigurationProperties(prefix = "telegrambot")
 public class BotConfig {
-    private String webHookPath;
-    private String botUserName;
+    private String botUsername;
     private String botToken;
 
-    private DefaultBotOptions.ProxyType proxyType;
-    private String proxyHost;
-    private int proxyPort;
+    @Bean
+    TelegramBotsApi telegramBotsApi() throws TelegramApiException {
+        return new TelegramBotsApi(DefaultBotSession.class);
+    }
 
     @Bean
-    public HealthServiceTelegramBot TelegramBot() {
-        DefaultBotOptions options = ApiContext
-                .getInstance(DefaultBotOptions.class);
+    String botUsername() {
+        return botUsername;
+    }
 
-        options.setProxyHost(proxyHost);
-        options.setProxyPort(proxyPort);
-        options.setProxyType(proxyType);
-
-        HealthServiceTelegramBot telegramBot = new HealthServiceTelegramBot(options);
-        telegramBot.setBotUserName(botUserName);
-        telegramBot.setBotToken(botToken);
-        telegramBot.setWebHookPath(webHookPath);
-
-        return telegramBot;
+    @Bean
+    String botToken() {
+        return botToken;
     }
 }

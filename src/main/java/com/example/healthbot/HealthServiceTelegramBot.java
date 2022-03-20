@@ -1,61 +1,54 @@
 package com.example.healthbot;
 
-import org.telegram.telegrambots.bots.DefaultBotOptions;
-import org.telegram.telegrambots.bots.TelegramWebhookBot;
-import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
+import lombok.Getter;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-public class HealthServiceTelegramBot extends TelegramWebhookBot{
-    private String webHookPath;
-    private String botUserName;
-    private String botToken;
+@Slf4j
+@Getter
+@Component
+public class HealthServiceTelegramBot extends TelegramLongPollingBot {
 
-    public HealthServiceTelegramBot(DefaultBotOptions botOptions) {
-        super(botOptions);
-    }
+    private Message requestMessage = new Message();
+    private final SendMessage response = new SendMessage();
 
-    @Override
-    public String getBotToken() {
-        return botToken;
-    }
+    private final String botUsername;
+    private final String botToken;
 
-    @Override
-    public String getBotUsername() {
-        return botUserName;
-    }
-
-    @Override
-    public String getBotPath() {
-        return webHookPath;
-    }
-
-    @Override
-    public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
-        if (update.getMessage() != null && update.getMessage().hasText()) {
-            String chat_id = update.getMessage().getChatId().toString();
-
-
-            try {
-                execute(new SendMessage(chat_id, "Hi " + update.getMessage().getText()));
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return null;
-    }
-
-    public void setWebHookPath(String webHookPath) {
-        this.webHookPath = webHookPath;
-    }
-
-    public void setBotUserName(String botUserName) {
-        this.botUserName = botUserName;
-    }
-
-    public void setBotToken(String botToken) {
+    public HealthServiceTelegramBot(
+            TelegramBotsApi telegramBotsApi,
+            String botUsername,
+            String botToken)throws TelegramApiException {
+        this.botUsername = botUsername;
         this.botToken = botToken;
+
+        telegramBotsApi.registerBot(this);
+    }
+
+    @SneakyThrows
+    @Override
+    public void onUpdateReceived(Update request) {
+        requestMessage = request.getMessage();
+        response.setChatId(requestMessage.getChatId().toString());
+
+        if (requestMessage.getText().equals("/start"))
+            defaultMsg(response, "ААААА наконец то я разговариваю");
+        else
+            defaultMsg(response, "Ты че ты че, сюда заходи!");
+
+        log.info("User text[{}]", requestMessage.getText());
+
+    }
+
+    private void defaultMsg(SendMessage response, String msg) throws TelegramApiException {
+        response.setText(msg);
+        execute(response);
     }
 }
