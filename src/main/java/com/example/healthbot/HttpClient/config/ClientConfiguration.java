@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class ClientConfiguration {
-    private static final String BASE_URL = "https://www.google.com";
+    private static final String BASE_URL = "https://www.e1.ru/health/pharma/";
     public static final int TIMEOUT = 1000;
 
     @Bean
