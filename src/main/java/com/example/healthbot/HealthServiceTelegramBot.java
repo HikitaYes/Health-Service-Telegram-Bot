@@ -26,10 +26,8 @@ public class HealthServiceTelegramBot extends TelegramLongPollingBot {
 
     private final HttpClient httpClient;
 
-    public HealthServiceTelegramBot(
-            TelegramBotsApi telegramBotsApi,
-            String botUsername,
-            String botToken, HttpClient httpClient)throws TelegramApiException {
+    public HealthServiceTelegramBot(TelegramBotsApi telegramBotsApi, String botUsername, String botToken,
+                                    HttpClient httpClient) throws TelegramApiException {
         this.botUsername = botUsername;
         this.botToken = botToken;
         this.httpClient = httpClient;
