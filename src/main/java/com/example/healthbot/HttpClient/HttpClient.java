@@ -21,7 +21,8 @@ import java.nio.charset.StandardCharsets;
 public class HttpClient {
     private final WebClient webClient;
 
-    public Mono<String> getPage(String uri, MultiValueMap<String, String> map) {
+//    public Mono<String> getPage(String uri, MultiValueMap<String, String> map) {
+    public String getPage(String uri, MultiValueMap<String, String> map) {
         return webClient
                 .get()
                 .uri(uriBuilder -> uriBuilder
@@ -34,6 +35,7 @@ public class HttpClient {
                         error -> Mono.error(new RuntimeException("Client side error while request")))
                 .onStatus(HttpStatus::is5xxServerError,
                         error -> Mono.error(new RuntimeException("Server side error while request")))
-                .bodyToMono(String.class);
+                .bodyToMono(String.class)
+                .block();
     }
 }
