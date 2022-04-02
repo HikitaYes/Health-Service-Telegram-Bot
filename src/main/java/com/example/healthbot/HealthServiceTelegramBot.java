@@ -1,6 +1,6 @@
 package com.example.healthbot;
 
-import com.example.healthbot.HttpClient.HttpClient;
+import com.example.healthbot.logic.*;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -8,31 +8,30 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import reactor.core.publisher.Mono;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Getter
 @Component
 public class HealthServiceTelegramBot extends TelegramLongPollingBot {
 
-    private Message requestMessage = new Message();
-    private final SendMessage response = new SendMessage();
-
     private final String botUsername;
     private final String botToken;
 
-    private final HttpClient httpClient;
+    private final Logic logic;
 
-    public HealthServiceTelegramBot(
-            TelegramBotsApi telegramBotsApi,
-            String botUsername,
-            String botToken, HttpClient httpClient)throws TelegramApiException {
+    public HealthServiceTelegramBot(TelegramBotsApi telegramBotsApi, String botUsername, String botToken,
+                                    Logic logic) throws TelegramApiException {
         this.botUsername = botUsername;
         this.botToken = botToken;
-        this.httpClient = httpClient;
+        this.logic = logic;
 
         telegramBotsApi.registerBot(this);
     }
@@ -40,24 +39,54 @@ public class HealthServiceTelegramBot extends TelegramLongPollingBot {
     @SneakyThrows
     @Override
     public void onUpdateReceived(Update request) {
-        requestMessage = request.getMessage();
-        response.setChatId(requestMessage.getChatId().toString());
+        var response = new SendMessage();
+        var requestMessage = "";
 
-        //Do http request and print raw html data
-        Mono<String> data = this.httpClient.getPage();
-        data.subscribe(System.out::println);
+        if (request.hasMessage()) {
+            var message = request.getMessage();
+            requestMessage = message.getText();
+            response.setChatId(message.getChatId().toString());
+            log.info("User text[{}]", requestMessage);
+        }
+        else if (request.hasCallbackQuery()) {
+            var callback = request.getCallbackQuery();
+            requestMessage = callback.getData();
+            response.setChatId(callback.getMessage().getChatId().toString());
+            log.info("Callback text[{}]", requestMessage);
+        }
 
-        if (requestMessage.getText().equals("/start"))
-            defaultMsg(response, "ААААА наконец то я разговариваю");
-        else
-            defaultMsg(response, "Ты че ты че, сюда заходи!");
-
-        log.info("User text[{}]", requestMessage.getText());
-
+        Answer answer = logic.getAnswer(requestMessage);
+        switch (answer) {
+            case Answer.Text t -> response.setText(t.text());
+            case Answer.MedicinesChoice m -> {
+                setInlineKeyboard(response, m.medicines());
+                response.setText(m.text());
+            }
+            case Answer.DistrictChoice d -> {
+                setInlineKeyboard(response, d.districts());
+                response.setText(d.text());
+            }
+            case Answer.SearchResult r -> response.setText(r.info());
+        }
+        execute(response);
     }
 
-    private void defaultMsg(SendMessage response, String msg) throws TelegramApiException {
-        response.setText(msg);
-        execute(response);
+    private void setInlineKeyboard(SendMessage response, Map<String, String> info) {
+        var inlineKeyboard = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
+
+        for (var entry : info.entrySet())
+        {
+            List<InlineKeyboardButton> row = new ArrayList<>();
+            var button = new InlineKeyboardButton();
+            button.setText(entry.getValue());
+            button.setCallbackData(entry.getKey());
+            row.add(button);
+            rowList.add(row);
+        }
+
+        inlineKeyboard.setKeyboard(rowList);
+        response.setReplyMarkup(inlineKeyboard);
+
     }
 }

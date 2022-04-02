@@ -1,4 +1,4 @@
-package com.example.healthbot.HttpClient.responseModel;
+package com.example.healthbot.httpclient.responseModel;
 
 import lombok.Data;
 
