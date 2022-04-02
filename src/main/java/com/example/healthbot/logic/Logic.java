@@ -1,11 +1,10 @@
 package com.example.healthbot.logic;
 
-import com.example.healthbot.HttpClient.HttpClient;
+import com.example.healthbot.httpclient.HttpClient;
 import lombok.SneakyThrows;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
 
 import java.net.URLEncoder;
 import java.util.*;
@@ -79,8 +78,6 @@ public class Logic {
         headers.add("act", "go");
         headers.add("request", URLEncoder.encode(name, "cp1251"));
 
-//        Mono<String> data = httpClient.getPage("/search.php", map);
-//        data.subscribe(text -> {
         String text = httpClient.getPage("/search.php", headers);
         Map<String, String> info = new HashMap<>();
         Pattern pattern = Pattern.compile("<a href='/health/pharma/med-\\d+'>.+</a>");

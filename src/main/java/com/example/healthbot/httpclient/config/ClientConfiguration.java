@@ -1,4 +1,4 @@
-package com.example.healthbot.HttpClient.config;
+package com.example.healthbot.httpclient.config;
 
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
