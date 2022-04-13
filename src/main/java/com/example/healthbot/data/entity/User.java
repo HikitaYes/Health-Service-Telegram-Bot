@@ -5,7 +5,7 @@ import lombok.Setter;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "user")
+@Table(name = "users")
 @Setter
 @Getter
 public class User {
@@ -19,6 +19,11 @@ public class User {
 
     public User(Long id) {
         this.id = id;
+    }
+
+    public User(String username, String address) {
+        this.username = username;
+        this.address = address;
     }
 
     public User() {

@@ -49,6 +49,10 @@ public class HealthServiceTelegramBot extends TelegramLongPollingBot {
         var response = new SendMessage();
         var requestMessage = "";
 
+//        How we can work with database
+//        This code save user in db
+//        userRepository.save(new User("username", "address"));
+
         if (request.hasMessage()) {
             var message = request.getMessage();
             requestMessage = message.getText();
