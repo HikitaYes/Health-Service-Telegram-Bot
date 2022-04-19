@@ -1,5 +1,8 @@
 package com.example.healthbot;
 
+
+import com.example.healthbot.data.entity.User;
+import com.example.healthbot.data.repository.UserRepository;
 import com.example.healthbot.logic.*;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -12,6 +15,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,11 +31,14 @@ public class HealthServiceTelegramBot extends TelegramLongPollingBot {
 
     private final Logic logic;
 
+    private final UserRepository userRepository;
+
     public HealthServiceTelegramBot(TelegramBotsApi telegramBotsApi, String botUsername, String botToken,
-                                    Logic logic) throws TelegramApiException {
+                                    Logic logic, UserRepository userRepository) throws TelegramApiException {
         this.botUsername = botUsername;
         this.botToken = botToken;
         this.logic = logic;
+        this.userRepository = userRepository;
 
         telegramBotsApi.registerBot(this);
     }
@@ -41,6 +48,10 @@ public class HealthServiceTelegramBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update request) {
         var response = new SendMessage();
         var requestMessage = "";
+
+//        How we can work with database
+//        This code save user in db
+//        userRepository.save(new User("username", "address"));
 
         if (request.hasMessage()) {
             var message = request.getMessage();

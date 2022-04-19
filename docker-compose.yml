@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  postgres:
+    image: 'postgres:13'
+    container_name: 'postgresql'
+    ports:
+      - 5000:5000
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pwd
+      - POSTGRES_DB=db
+    volumes:
+      - ./src/postgresql/scripts/0_create_tables.sql:/docker-entrypoint-initdb.d/0_create_tables.sql
