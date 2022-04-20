@@ -3,6 +3,7 @@ package com.example.healthbot.logic;
 import com.example.healthbot.HttpClient.HttpClient;
 import lombok.SneakyThrows;
 import org.springframework.context.annotation.Scope;
+import org.springframework.data.util.Pair;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -64,8 +65,8 @@ public class Logic {
                         case State.ExpectDistrictOrAddress d -> {
                             if (districts.containsKey(Integer.toString(number))) {
                                 state = new State.ExpectMedicineName();
-                                String info = findResultInfo(number);
-                                return new Answer.SearchResult(info);
+                                List<String> info = findResultInfo(Integer.toString(number));
+                                return new Answer.SearchResult(String.join("\n", info));
                             } else {
                                 return new Answer.Text(districtOrAddressChoiceMsg);
                             }
@@ -85,7 +86,8 @@ public class Logic {
                         }
                         case State.ExpectDistrictOrAddress a -> {
                             state = new State.ExpectMedicineName();
-                            return new Answer.Text("Все будет");
+                            var result = getNearestResults(message);
+                            return new Answer.Text(result);
                         }
                         default -> {
                             return new Answer.Text(errorMsg);
@@ -118,9 +120,9 @@ public class Logic {
         return info;
     }
 
-    private String findResultInfo(Integer district) {
+    private List<String> findResultInfo(String district) {
         var headers = new HttpHeaders();
-        headers.add("dist", district.toString());
+        headers.add("dist", district);
         String text = httpClient.getPage("/med-%s".formatted(targetId), headers);
 
         var parse = Arrays.stream(text
@@ -153,7 +155,7 @@ public class Logic {
                     .split("</span>")[0];
             info.add("%s\n%s, %s".formatted(cost, name, address));
         }
-        return String.join("\n", info);
+        return info;
     }
 
     private String getCoordinates(String address) {
@@ -181,5 +183,45 @@ public class Logic {
             return district;
         }
         return null;
+    }
+
+    private static List<Double> coordinateToDouble(String coordinate) {
+        var list = coordinate.split(" ");
+        return List.of(Double.parseDouble(list[0]), Double.parseDouble(list[1]));
+    }
+
+    private static Double getDistance(String coord1, String coord2) {
+        var coordinate1 = coordinateToDouble(coord1);
+        var coordinate2 = coordinateToDouble(coord2);
+        var x1 = coordinate1.get(0);
+        var x2 = coordinate2.get(0);
+        var y1 = coordinate1.get(1);
+        var y2 = coordinate2.get(1);
+        return Math.sqrt(Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2));
+    }
+
+    private String getNearestResults(String initialAddress) {
+        var initialCoordinates = getCoordinates(initialAddress);
+        var district = getDistrict(initialCoordinates);
+        var number = districts
+                .entrySet()
+                .stream()
+                .filter(entry -> entry.getValue().equals(district))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse("-1");
+        var info = findResultInfo(number);
+
+        info = info.stream()
+            .map(x -> {
+                var address = x.split("ул. ")[1];
+                var coordinates = getCoordinates(address);
+                Double distance = getDistance(initialCoordinates, coordinates);
+                return Pair.of(distance, x);
+            })
+            .sorted(Comparator.comparing(Pair::getFirst))
+            .map(Pair::getSecond)
+            .toList();
+        return String.join("\n", info);
     }
 }
