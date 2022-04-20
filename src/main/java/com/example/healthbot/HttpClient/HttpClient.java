@@ -21,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 public class HttpClient {
     private final WebClient webClient;
 
-//    public Mono<String> getPage(String uri, MultiValueMap<String, String> map) {
     public String getPage(String uri, MultiValueMap<String, String> map) {
         return webClient
                 .get()
