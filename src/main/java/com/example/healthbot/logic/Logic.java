@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 @Component
 @Scope("prototype")
 public class Logic {
-    private State state = new State.ExpectMedicineName();
+    private final String KeyYandexMapsApi = "key here";
 
     private final String helpMsg = "Я бот, который покажет вам самые низкие цены на лекарства в аптеках Екатеринбурга.\nВведите название лекарства.";
     private final String startMsg = "Привет! " + helpMsg;
@@ -40,6 +40,7 @@ public class Logic {
 
     private Integer targetId = null;
     private final HttpClient httpClient;
+    private State state = new State.ExpectMedicineName();
 
     public Logic(HttpClient httpClient) {
         this.httpClient = httpClient;
@@ -155,20 +156,17 @@ public class Logic {
         return String.join("\n", info);
     }
 
-    private List<Double> getCoordinates(String address) {
-        String key = "key here";
+    private String getCoordinates(String address) {
         String[] list = address.split(" ");
         String street = list[0];
         String number = list[1];
         String query = String.format(
                 "https://geocode-maps.yandex.ru/1.x/?apikey=%s&format=json&geocode=Екатеринбург,+%s+улица,+дом+%s",
-                key, street, number);
+                KeyYandexMapsApi, street, number);
 
         var response = WebClient.create().get().uri(query).retrieve().bodyToMono(String.class).block();
 
-        var coordinates = response.split("Point")[1].split("pos\":\"")[1].split("\"")[0].split(" ");
-        var latitude = Double.valueOf(coordinates[1]);
-        var longitude = Double.valueOf(coordinates[0]);
-        return List.of(latitude, longitude);
+        var coordinates = response.split("Point")[1].split("pos\":\"")[1].split("\"")[0];
+        return coordinates;
     }
 }
