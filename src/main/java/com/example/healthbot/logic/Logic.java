@@ -139,8 +139,12 @@ public class Logic {
                     .split("</nobr>")[0]
                     .trim()
                     .replaceAll("<a href=.+?>", "")
-                    .replaceAll("</a>", "")
-                    .split("Екатеринбург, ")[1];
+                    .replaceAll("</a>", "");
+
+            var town = address.split(", ")[0];
+            if (!town.equals("Екатеринбург")) continue;
+            address = address.split("Екатеринбург, ")[1];
+
             if (!address.split(" ")[0].equals("ул.") && !address.contains(".ru"))
                 address = "ул. " + address;
             var cost = data
