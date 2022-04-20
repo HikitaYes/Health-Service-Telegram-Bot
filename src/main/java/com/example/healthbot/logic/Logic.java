@@ -1,6 +1,6 @@
 package com.example.healthbot.logic;
 
-import com.example.healthbot.HttpClient.HttpClient;
+import com.example.healthbot.httpclient.HttpClient;
 import lombok.SneakyThrows;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.util.Pair;
