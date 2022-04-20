@@ -165,8 +165,24 @@ public class Logic {
                 KeyYandexMapsApi, street, number);
 
         var response = WebClient.create().get().uri(query).retrieve().bodyToMono(String.class).block();
-
         var coordinates = response.split("Point")[1].split("pos\":\"")[1].split("\"")[0];
         return coordinates;
+    }
+
+    private String getDistrict(String coordinates) {
+        coordinates = coordinates.replace(" ", ",");
+        String query = String.format(
+                "https://geocode-maps.yandex.ru/1.x/?apikey=%s&format=json&geocode=%s&kind=district",
+                KeyYandexMapsApi, coordinates);
+
+        var response = WebClient.create().get().uri(query).retrieve().bodyToMono(String.class).block();
+        var parse = response.split("\"kind\":\"district\",\"name\":\"");
+        for (int i = 1; i < parse.length; i++) {
+            var district = parse[i].split("\"}]}")[0];
+            if (!district.contains(" район")) continue;
+            district = district.split(" район")[0];
+            return district;
+        }
+        return null;
     }
 }
