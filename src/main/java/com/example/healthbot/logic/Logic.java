@@ -5,6 +5,7 @@ import lombok.SneakyThrows;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.net.URLEncoder;
 import java.util.*;
@@ -148,5 +149,22 @@ public class Logic {
             info.add("%s\n%s, %s".formatted(cost, name, address));
         }
         return String.join("\n", info);
+    }
+
+    private List<Double> getCoordinates(String address) {
+        String key = "key here";
+        String[] list = address.split(" ");
+        String street = list[0];
+        String number = list[1];
+        String query = String.format(
+                "https://geocode-maps.yandex.ru/1.x/?apikey=%s&format=json&geocode=Екатеринбург,+%s+улица,+дом+%s",
+                key, street, number);
+
+        var response = WebClient.create().get().uri(query).retrieve().bodyToMono(String.class).block();
+
+        var coordinates = response.split("Point")[1].split("pos\":\"")[1].split("\"")[0].split(" ");
+        var latitude = Double.valueOf(coordinates[1]);
+        var longitude = Double.valueOf(coordinates[0]);
+        return List.of(latitude, longitude);
     }
 }
