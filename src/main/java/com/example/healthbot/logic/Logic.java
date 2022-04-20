@@ -157,12 +157,9 @@ public class Logic {
     }
 
     private String getCoordinates(String address) {
-        String[] list = address.split(" ");
-        String street = list[0];
-        String number = list[1];
         String query = String.format(
-                "https://geocode-maps.yandex.ru/1.x/?apikey=%s&format=json&geocode=Екатеринбург,+%s+улица,+дом+%s",
-                KeyYandexMapsApi, street, number);
+                "https://geocode-maps.yandex.ru/1.x/?apikey=%s&format=json&geocode=Екатеринбург,%s",
+                KeyYandexMapsApi, address);
 
         var response = WebClient.create().get().uri(query).retrieve().bodyToMono(String.class).block();
         var coordinates = response.split("Point")[1].split("pos\":\"")[1].split("\"")[0];
