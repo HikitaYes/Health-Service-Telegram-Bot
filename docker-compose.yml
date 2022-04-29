@@ -5,7 +5,7 @@ services:
     image: 'postgres:13'
     container_name: 'postgresql'
     ports:
-      - 5000:5000
+      - 5432:5000
     environment:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=pwd
