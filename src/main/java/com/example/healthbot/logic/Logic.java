@@ -20,13 +20,14 @@ import java.util.regex.Pattern;
 @Component
 @Scope("prototype")
 public class Logic {
-    private final String KeyYandexMapsApi = "7e6317ed-a24a-4c31-8abd-cfecc30fbd06";
+    private final String KeyYandexMapsApi = "key here";
 
     private final String helpMsg = "Я бот, который покажет вам самые низкие цены на лекарства в аптеках Екатеринбурга.\nВведите название лекарства.";
     private final String startMsg = "Привет! " + helpMsg;
     private final String sorryMsg = "Такого лекарства я не нашел. Попробуйте еще раз.";
     private final String medicinesChoiceMsg = "Выберите производителя и дозировку:";
-    private final String districtOrAddressChoiceMsg = "Введите адрес в формате \"Улица дом\", около которого хотите найти аптеки, или выберите район из списка:";
+    private final String addressChoiceMsg = "Введите адрес в формате \"Улица дом\", около которого хотите найти аптеки, или нажмите на выбор района";
+    private final String districtChoiceMsg = "Выберите район из списка:";
     private final String errorMsg = "Что-то пошло не так, попробуйте еще раз.";
 
     private Map<String, String> districts = new LinkedHashMap<>();
@@ -62,17 +63,17 @@ public class Logic {
                     var number = Integer.parseInt(message);
                     switch (state) {
                         case State.ExpectMedicineId m -> {
-                            state = new State.ExpectDistrictOrAddress();
+                            state = new State.ExpectAddress();
                             targetId = number;
-                            return new Answer.DistrictChoice(districtOrAddressChoiceMsg, districts);
+                            return new Answer.AddressChoice(addressChoiceMsg);
                         }
-                        case State.ExpectDistrictOrAddress d -> {
+                        case State.ExpectDistrict d -> {
                             if (districts.containsKey(Integer.toString(number))) {
                                 state = new State.ExpectMedicineName();
                                 List<String> info = findResultInfo(Integer.toString(number));
                                 return new Answer.SearchResult(String.join("\n", info));
                             } else {
-                                return new Answer.Text(districtOrAddressChoiceMsg);
+                                return new Answer.Text(districtChoiceMsg);
                             }
                         }
                         default -> {
@@ -88,7 +89,11 @@ public class Logic {
                                 return new Answer.Text(sorryMsg);
                             return new Answer.MedicinesChoice(medicinesChoiceMsg, medicines);
                         }
-                        case State.ExpectDistrictOrAddress a -> {
+                        case State.ExpectAddress a -> {
+                            if (message.equals("Выбор района")) {
+                                state = new State.ExpectDistrict();
+                                return new Answer.DistrictChoice(districtChoiceMsg, districts);
+                            }
                             state = new State.ExpectMedicineName();
                             var result = getNearestResults(message);
                             return new Answer.Text(result);
