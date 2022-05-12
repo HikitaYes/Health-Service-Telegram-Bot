@@ -8,7 +8,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -16,7 +20,7 @@ import java.util.regex.Pattern;
 @Component
 @Scope("prototype")
 public class Logic {
-    private final String KeyYandexMapsApi = "key here";
+    private final String KeyYandexMapsApi = "7e6317ed-a24a-4c31-8abd-cfecc30fbd06";
 
     private final String helpMsg = "Я бот, который покажет вам самые низкие цены на лекарства в аптеках Екатеринбурга.\nВведите название лекарства.";
     private final String startMsg = "Привет! " + helpMsg;
@@ -97,20 +101,39 @@ public class Logic {
         }
     }
 
+    private String readFile(String name) {
+        String baseName = "D:\\Intelij IDEA\\Naumen\\Health-Service-Telegram-Bot\\src\\main\\resources\\html\\";
+        StringBuilder contentBuilder = new StringBuilder();
+        try {
+            BufferedReader in = new BufferedReader(new FileReader(
+                    baseName + name + ".html", Charset.forName("Cp1251")));
+            String str;
+            while ((str = in.readLine()) != null) {
+                contentBuilder.append(str);
+            }
+            in.close();
+        } catch (IOException e) {
+        }
+        String content = contentBuilder.toString();
+        return content;
+    }
+
     @SneakyThrows
     private Map<String, String> findMedicines(String name) {
-        var headers = new HttpHeaders();
-        headers.add("act", "go");
-        headers.add("request", URLEncoder.encode(name, "cp1251"));
+//        var headers = new HttpHeaders();
+//        headers.add("act", "go");
+//        headers.add("request", URLEncoder.encode(name, "cp1251"));
 
-        String text = httpClient.getPage("/search.php", headers);
+//        String text = httpClient.getPage("/search.php", headers);
+        String text = readFile(name);
+
         Map<String, String> info = new HashMap<>();
-        Pattern pattern = Pattern.compile("<a href='/health/pharma/med-\\d+'>.+</a>");
+        Pattern pattern = Pattern.compile("/health/pharma/med-\\d+[\"']>.+?</a>");
         Matcher matcher = pattern.matcher(text);
 
         while (matcher.find()) {
             var match = matcher.group()
-                    .split("<a href='/health/pharma/med-")[1]
+                    .split("/health/pharma/med-")[1]
                     .split("</a>")[0]
                     .split(">");
             var number = match[0].substring(0, match[0].length() - 1);
@@ -121,14 +144,16 @@ public class Logic {
     }
 
     private List<String> findResultInfo(String district) {
-        var headers = new HttpHeaders();
-        headers.add("dist", district);
-        String text = httpClient.getPage("/med-%s".formatted(targetId), headers);
+//        var headers = new HttpHeaders();
+//        headers.add("dist", district);
+//        String text = httpClient.getPage("/med-%s".formatted(targetId), headers);
+
+        String text = readFile(targetId + "\\" + district);
 
         var parse = Arrays.stream(text
                 .split("<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">")[1]
                 .split("<table border=\"0\" cellspacing=\"0\" cellpadding=\"9\" width=\"100%\">")[0]
-                .split("<tr valign=\"top\".+>")).skip(1)
+                .split("<tr valign=\"top\".+?>")).skip(1)
                 .toList();
 
         List<String> info = new ArrayList<>();
