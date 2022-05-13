@@ -77,6 +77,7 @@ public class Logic {
                             }
                         }
                         default -> {
+                            state = new State.ExpectMedicineName();
                             return new Answer.Text(errorMsg);
                         }
                     }
