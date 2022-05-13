@@ -100,6 +100,7 @@ public class Logic {
                             return new Answer.Text(result);
                         }
                         default -> {
+                            state = new State.ExpectMedicineName();
                             return new Answer.Text(errorMsg);
                         }
                     }
